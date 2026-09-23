@@ -1,0 +1,39 @@
+name: "Terraform CI"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: "Lint & Validate"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.3"
+
+      - name: Check Code Formatting
+        run: terraform fmt -check -recursive
+
+      - name: Validate Bootstrap Backend
+        working-directory: ./bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate Core Platform Infrastructure
+        working-directory: ./terraform
+        run: |
+          terraform init -backend=false
+          terraform validate
